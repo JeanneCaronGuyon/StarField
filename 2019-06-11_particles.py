@@ -18,17 +18,16 @@ import matplotlib.pyplot as plt
 import scipy.integrate as integrate
 import matplotlib.animation as animation
 
+
 class ParticleBox:
-    """ StarField
+    """StarField
 
     bounds is the size of the box: [xmin, xmax, ymin, ymax]
     """
-    def __init__(self,
-                 bounds = [0, 1, 0, 1, 0, 200],
-                 size = 10.,
-                 N = 1000,
-                 V = 2.,
-                 theta = 0.):
+
+    def __init__(
+        self, bounds=[0, 1, 0, 1, 0, 200], size=10.0, N=1000, V=2.0, theta=0.0
+    ):
         self.bounds = np.asarray(bounds, dtype=float)
         self.N = N
         self.time_elapsed = 0
@@ -36,7 +35,7 @@ class ParticleBox:
         self.size = size
         self.theta = theta
         self.d_max = 20
-        self.d_min = .1
+        self.d_min = 0.1
         self.init()
         self.project()
 
@@ -47,8 +46,8 @@ class ParticleBox:
         """
         self.pos = np.random.rand(self.N, 3)
         for i in range(3):
-            self.pos[:, i] *= (self.bounds[2*i+1] - self.bounds[2*i])
-            self.pos[:, i] -= self.bounds[2*i]
+            self.pos[:, i] *= self.bounds[2 * i + 1] - self.bounds[2 * i]
+            self.pos[:, i] -= self.bounds[2 * i]
             print(self.pos[:, i].min(), self.pos[:, i].max())
 
     def project(self):
@@ -65,10 +64,10 @@ class ParticleBox:
         pos[:, 2] -= np.cos(self.theta) * self.V * self.time_elapsed
         # TODO: wrap all in a novel box
 
-        d = (pos**2).sum(axis=1)**.5
-        ind_visible = (pos[:, 2] > 0) * (self.d_min<d) * (d<self.d_max)
+        d = (pos ** 2).sum(axis=1) ** 0.5
+        ind_visible = (pos[:, 2] > 0) * (self.d_min < d) * (d < self.d_max)
 
-        #self.state = [X, Y, ms]
+        # self.state = [X, Y, ms]
         N_visible = int(np.sum(ind_visible))
         self.state = np.ones((N_visible, 3))
         # print (self.time_elapsed, N_visible, self.state[:, 1].shape, pos[ind_visible, 1].shape, d[ind_visible].shape)#, d[ind_visible])
@@ -85,35 +84,38 @@ class ParticleBox:
 
         # HACK
         self.state /= 2
-        self.state += .5
-
+        self.state += 0.5
 
     def step(self, dt):
         """step once by dt seconds"""
         self.time_elapsed += dt
         self.project()
 
-#------------------------------------------------------------
+
+# ------------------------------------------------------------
 # set up initial state
 np.random.seed(42)
 box = ParticleBox()
-dt = 1. / 30 # 30fps
+dt = 1.0 / 30  # 30fps
 
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # set up figure and animation
 fig = plt.figure()
 fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
-                     xlim=(0, 1), ylim=(0, 1))
+ax = fig.add_subplot(111, aspect="equal", autoscale_on=False, xlim=(0, 1), ylim=(0, 1))
 
 # particles holds the locations of the particles
 # particles, = ax.plot([], [], 'bo', ms=6)
 
 # rect is the box edge
-rect = plt.Rectangle(box.bounds[::2],
-                     box.bounds[1] - box.bounds[0],
-                     box.bounds[3] - box.bounds[2],
-                     ec='none', lw=2, fc='none')
+rect = plt.Rectangle(
+    box.bounds[::2],
+    box.bounds[1] - box.bounds[0],
+    box.bounds[3] - box.bounds[2],
+    ec="none",
+    lw=2,
+    fc="none",
+)
 ax.add_patch(rect)
 
 # box.step(dt)
@@ -138,19 +140,23 @@ def animate(i):
     ms = 6
 
     # update pieces of the animation
-    rect.set_edgecolor('k')
+    rect.set_edgecolor("k")
     # print(len(ms), box.state.shape)
     # print(box.state[:, 0].min(), box.state[:, 0].max())
-    particles = ax.scatter(box.state[:, 0], box.state[:, 1], marker='o', c='b', s=box.state[:, 2])
-    #particles.set_data(box.state[:, 0], box.state[:, 1])
-    #particles.set_markersize(box.state[:, 2]*ms)
+    particles = ax.scatter(
+        box.state[:, 0], box.state[:, 1], marker="o", c="b", s=box.state[:, 2]
+    )
+    # particles.set_data(box.state[:, 0], box.state[:, 1])
+    # particles.set_markersize(box.state[:, 2]*ms)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
 
     return particles, rect
 
-ani = animation.FuncAnimation(fig, animate, frames=600,
-                              interval=10, blit=True)#, init_func=init)
+
+ani = animation.FuncAnimation(
+    fig, animate, frames=600, interval=10, blit=True
+)  # , init_func=init)
 
 
 # save the animation as an mp4.  This requires ffmpeg or mencoder to be
@@ -158,6 +164,6 @@ ani = animation.FuncAnimation(fig, animate, frames=600,
 # the video can be embedded in html5.  You may need to adjust this for
 # your system: for more information, see
 # http://matplotlib.sourceforge.net/api/animation_api.html
-#ani.save('starfield.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+# ani.save('starfield.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 
 plt.show()

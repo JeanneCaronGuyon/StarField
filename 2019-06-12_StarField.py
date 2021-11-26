@@ -12,29 +12,35 @@ license: BSD
 Please feel free to use and modify this, but keep the above information. Thanks!
 """
 import sys
-BACKEND = 'webagg'
-BACKEND = 'MacOSX'
-BACKEND = 'GTK3Agg'
-BACKEND = 'tkagg'
+
+BACKEND = "webagg"
+BACKEND = "MacOSX"
+BACKEND = "GTK3Agg"
+BACKEND = "tkagg"
 import matplotlib
+
 matplotlib.use(BACKEND)
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+
 class ParticleBox:
-    """ StarField
+    """StarField
 
     bounds is the size of the box: [xmin, xmax, ymin, ymax]
     """
-    def __init__(self,
-                 bounds = [-3, 3, -3, 3, 0, 10],
-                 # bounds = [-2, 2, -2, 2, 0, 200],
-                 size = 10.,
-                 N = 10000,
-                 V = 2.,
-                 theta = np.pi/8):
+
+    def __init__(
+        self,
+        bounds=[-3, 3, -3, 3, 0, 10],
+        # bounds = [-2, 2, -2, 2, 0, 200],
+        size=10.0,
+        N=10000,
+        V=2.0,
+        theta=np.pi / 8,
+    ):
         self.bounds = np.asarray(bounds, dtype=float)
         self.N = N
         self.time_elapsed = 0
@@ -42,7 +48,7 @@ class ParticleBox:
         self.size = size
         self.theta = theta
         self.d_max = 10
-        self.d_min = .01
+        self.d_min = 0.01
         self.T = 5
         self.init()
         self.project()
@@ -54,9 +60,9 @@ class ParticleBox:
         """
         self.pos = np.random.rand(self.N, 3)
         for i in range(3):
-            self.pos[:, i] *= (self.bounds[2*i+1] - self.bounds[2*i])
-            self.pos[:, i] += self.bounds[2*i]
-            print('init', self.pos[:, i].min(), self.pos[:, i].max())
+            self.pos[:, i] *= self.bounds[2 * i + 1] - self.bounds[2 * i]
+            self.pos[:, i] += self.bounds[2 * i]
+            print("init", self.pos[:, i].min(), self.pos[:, i].max())
 
     def project(self):
         """
@@ -72,14 +78,15 @@ class ParticleBox:
 
         # wrap in a novel box around obs coords
         for i in range(2):
-            pos[:, i] = self.bounds[2*i] + np.mod(pos[:, i], self.bounds[2*i + 1]-self.bounds[2*i])
-            print('posi', i, pos[:, 2].min(), pos[:, 2].max())
+            pos[:, i] = self.bounds[2 * i] + np.mod(
+                pos[:, i], self.bounds[2 * i + 1] - self.bounds[2 * i]
+            )
+            print("posi", i, pos[:, 2].min(), pos[:, 2].max())
         pos[:, 2] = np.mod(pos[:, 2], self.bounds[5])
-        print('posZ', pos[:, 2].min(), pos[:, 2].max())
+        print("posZ", pos[:, 2].min(), pos[:, 2].max())
 
-
-        d = (pos**2).sum(axis=1)**.5
-        ind_visible = (pos[:, 2] > 0) * (self.d_min<d) * (d<self.d_max)
+        d = (pos ** 2).sum(axis=1) ** 0.5
+        ind_visible = (pos[:, 2] > 0) * (self.d_min < d) * (d < self.d_max)
         N_visible = int(np.sum(ind_visible))
 
         # self.state = [X, Y, size]
@@ -95,34 +102,38 @@ class ParticleBox:
 
         # HACK
         self.state /= 2
-        self.state += .5
-
+        self.state += 0.5
 
     def step(self, dt):
         """step once by dt seconds"""
         self.time_elapsed += dt
         self.project()
 
-#------------------------------------------------------------
+
+# ------------------------------------------------------------
 # set up initial state
 np.random.seed(42)
 box = ParticleBox()
-fps = 30 # 30fps
-dt = 1. / fps # 30fps
+fps = 30  # 30fps
+dt = 1.0 / fps  # 30fps
 
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # set up figure and animation
 fig = plt.figure()
 fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-ax = fig.add_subplot(111, aspect='equal', autoscale_on=False,
-                     xlim=(0, 1), ylim=(0, 1))
+ax = fig.add_subplot(111, aspect="equal", autoscale_on=False, xlim=(0, 1), ylim=(0, 1))
 
 # rect is the box edge
-rect = plt.Rectangle(box.bounds[::2],
-                     box.bounds[1] - box.bounds[0],
-                     box.bounds[3] - box.bounds[2],
-                     ec='none', lw=2, fc='none')
+rect = plt.Rectangle(
+    box.bounds[::2],
+    box.bounds[1] - box.bounds[0],
+    box.bounds[3] - box.bounds[2],
+    ec="none",
+    lw=2,
+    fc="none",
+)
 ax.add_patch(rect)
+
 
 def animate(i):
     """perform animation step"""
@@ -131,18 +142,23 @@ def animate(i):
     ax.cla()
 
     # update pieces of the animation
-    rect.set_edgecolor('k')
-    particles = ax.scatter(box.state[:, 0], box.state[:, 1], marker='o', c='b', s=box.state[:, 2])
-    #particles.set_data(box.state[:, 0], box.state[:, 1])
-    #particles.set_markersize(box.state[:, 2]*ms)
+    rect.set_edgecolor("k")
+    particles = ax.scatter(
+        box.state[:, 0], box.state[:, 1], marker="o", c="b", s=box.state[:, 2]
+    )
+    # particles.set_data(box.state[:, 0], box.state[:, 1])
+    # particles.set_markersize(box.state[:, 2]*ms)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    if box.time_elapsed > box.T: sys.exit()
+    if box.time_elapsed > box.T:
+        sys.exit()
     return particles, rect
 
-print('frames =', int(box.T*fps))
-ani = animation.FuncAnimation(fig, animate, frames=int(box.T*fps),
-                              interval=1000/fps)#, blit=True)#, init_func=init)
+
+print("frames =", int(box.T * fps))
+ani = animation.FuncAnimation(
+    fig, animate, frames=int(box.T * fps), interval=1000 / fps
+)  # , blit=True)#, init_func=init)
 
 
 # save the animation as an mp4.  This requires ffmpeg or mencoder to be
@@ -150,6 +166,6 @@ ani = animation.FuncAnimation(fig, animate, frames=int(box.T*fps),
 # the video can be embedded in html5.  You may need to adjust this for
 # your system: for more information, see
 # http://matplotlib.sourceforge.net/api/animation_api.html
-#ani.save('starfield.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+# ani.save('starfield.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 
 plt.show()
