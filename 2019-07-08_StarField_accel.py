@@ -12,28 +12,32 @@ license: BSD
 Please feel free to use and modify this, but keep the above information. Thanks!
 """
 import sys
-BACKEND = 'Qt5Agg'
+
+BACKEND = "Qt5Agg"
 import matplotlib
+
 matplotlib.use(BACKEND)
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+
 class ParticleBox:
-    """ StarField
+    """StarField
 
     bounds is the size of the box: [xmin, xmax, ymin, ymax]
     """
-    def __init__(self,
-                 bounds = [-4, 4, -4, 4, 0, 20],
-                 size = 30.,
-                 N = 10000,
-                 V = 0.,
-                 A = 1.,
 
-                 theta = np.pi/12, #change the angle 64 : direct
-                 ): 
+    def __init__(
+        self,
+        bounds=[-4, 4, -4, 4, 0, 20],
+        size=30.0,
+        N=10000,
+        V=0.0,
+        A=1.0,
+        theta=np.pi / 12,  # change the angle 64 : direct
+    ):
         self.bounds = np.asarray(bounds, dtype=float)
         self.N = N
         self.time_elapsed = 0
@@ -41,10 +45,10 @@ class ParticleBox:
         self.A = A
         self.size = size
         self.theta = theta
-        self.d_max = 6.
-        self.d_min = 1.e-6
-        self.mag = 5.
-        self.T = 3.
+        self.d_max = 6.0
+        self.d_min = 1.0e-6
+        self.mag = 5.0
+        self.T = 3.0
         self.init()
         self.project()
 
@@ -57,18 +61,18 @@ class ParticleBox:
 
         self.pos = np.random.rand(self.N, 7)
         for i in range(3):
-            self.pos[:, i] *= (self.bounds[2*i+1] - self.bounds[2*i])
-            self.pos[:, i] += self.bounds[2*i]
+            self.pos[:, i] *= self.bounds[2 * i + 1] - self.bounds[2 * i]
+            self.pos[:, i] += self.bounds[2 * i]
 
         # Star colors http://www.isthe.com/chongo/tech/astro/HR-temp-mass-table-byhrclass.html http://www.vendian.org/mncharity/dir3/starcolor/
-        O3 = np.array([144., 166., 255.])
-        O3 /= 255.
+        O3 = np.array([144.0, 166.0, 255.0])
+        O3 /= 255.0
         self.pos[:, 3:-1] = O3[None, :]
-        M4Ia = np.array([255., 185., 104.])
-        M4Ia /= 255.
-        self.pos[np.random.rand(self.N)>.5, 3:-1] = M4Ia[None, :]
+        M4Ia = np.array([255.0, 185.0, 104.0])
+        M4Ia /= 255.0
+        self.pos[np.random.rand(self.N) > 0.5, 3:-1] = M4Ia[None, :]
 
-        self.pos[:, -1] = .8 + .2*self.pos[:, -1]
+        self.pos[:, -1] = 0.8 + 0.2 * self.pos[:, -1]
 
     def project(self):
         """
@@ -79,19 +83,21 @@ class ParticleBox:
         pos = self.pos.copy()
 
         # center coordinates around obs coords
-        x = self.V * self.time_elapsed + 1/2 *self.A *self.time_elapsed ** 2
-        pos[:, 0] -= np.sin(self.theta) * x 
+        x = self.V * self.time_elapsed + 1 / 2 * self.A * self.time_elapsed ** 2
+        pos[:, 0] -= np.sin(self.theta) * x
         pos[:, 2] -= np.cos(self.theta) * x
 
         # wrap in a novel box around obs coords
         for i in range(3):
-            pos[:, i] = self.bounds[2*i] + np.mod(pos[:, i], self.bounds[2*i + 1]-self.bounds[2*i])
+            pos[:, i] = self.bounds[2 * i] + np.mod(
+                pos[:, i], self.bounds[2 * i + 1] - self.bounds[2 * i]
+            )
 
-        d = (pos**2).sum(axis=1)**.5
+        d = (pos ** 2).sum(axis=1) ** 0.5
         # order according to depth
         ind_sort = np.argsort(d)
         pos = pos[ind_sort, :]
-        d = (pos**2).sum(axis=1)**.5
+        d = (pos ** 2).sum(axis=1) ** 0.5
 
         # ind_visible = (pos[:, 2] > 0) * (self.d_min<d) * (d<self.d_max)
         ind_visible = (pos[:, 2] > self.d_min) * (d < self.d_max)
@@ -107,25 +113,26 @@ class ParticleBox:
         # colors do not change
         self.state[:, 3:] = pos[ind_visible, 3:]
 
-
     def step(self, dt):
         """step once by dt seconds"""
         self.time_elapsed += dt
         self.project()
 
-#------------------------------------------------------------
+
+# ------------------------------------------------------------
 # set up initial state
 np.random.seed(42)
 box = ParticleBox()
-fps = 30 # 30fps
-dt = 1. / fps # 30fps
+fps = 30  # 30fps
+dt = 1.0 / fps  # 30fps
 figsize = (15, 8)
-ratio = figsize[0]/figsize[1]
-#------------------------------------------------------------
+ratio = figsize[0] / figsize[1]
+# ------------------------------------------------------------
 # set up figure and animation
-fig, ax = plt.subplots(facecolor='black', subplot_kw=dict(autoscale_on=False))
-fig.set_facecolor('black')
+fig, ax = plt.subplots(facecolor="black", subplot_kw=dict(autoscale_on=False))
+fig.set_facecolor("black")
 fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+
 
 def animate(i):
     """perform animation step"""
@@ -133,15 +140,26 @@ def animate(i):
     box.step(dt)
     ax.cla()
     # note: s is the marker size in points**2.
-    particles = ax.scatter(box.state[:, 0], box.state[:, 1], marker='*', c=box.state[:, 3:], s=box.state[:, 2]**2, zorder=1)
+    particles = ax.scatter(
+        box.state[:, 0],
+        box.state[:, 1],
+        marker="*",
+        c=box.state[:, 3:],
+        s=box.state[:, 2] ** 2,
+        zorder=1,
+    )
 
     ax.set_xlim(-ratio, ratio)
     ax.set_ylim(-1, 1)
-    ax.axis('off')
-    if box.time_elapsed > box.T: sys.exit()
+    ax.axis("off")
+    if box.time_elapsed > box.T:
+        sys.exit()
     return ax
 
-ani = animation.FuncAnimation(fig, animate, frames=int(box.T*fps), interval=1000/fps)
+
+ani = animation.FuncAnimation(
+    fig, animate, frames=int(box.T * fps), interval=1000 / fps
+)
 
 # save the animation as an mp4.  This requires ffmpeg or mencoder to be
 # installed.  The extra_args ensure that the x264 codec is used, so that
@@ -150,10 +168,10 @@ ani = animation.FuncAnimation(fig, animate, frames=int(box.T*fps), interval=1000
 # http://matplotlib.sourceforge.net/api/animation_api.html
 
 
-#ani.save('starfield.mp4', fps=fps, extra_args=['-vcodec', 'libx264'], savefig_kwargs=dict( facecolor='black'), dpi=300)
+# ani.save('starfield.mp4', fps=fps, extra_args=['-vcodec', 'libx264'], savefig_kwargs=dict( facecolor='black'), dpi=300)
 
 
-#ani.save('starfield', fps=fps, savefig_kwargs=dict( facecolor='black'), dpi=300)
+# ani.save('starfield', fps=fps, savefig_kwargs=dict( facecolor='black'), dpi=300)
 
 
 # import os
